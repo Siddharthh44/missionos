@@ -1,4 +1,5 @@
-import { LockKeyhole, Orbit } from "lucide-react";
+import { Orbit } from "lucide-react";
+import LoginForm from "@/features/auth/login-form";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 
 export default function LoginPage() {
@@ -14,26 +15,26 @@ export default function LoginPage() {
               A premium operational layer for mission alignment and momentum.
             </h1>
             <p className="max-w-md text-sm leading-7 text-text-secondary">
-              The shell is now stable enough for real auth wiring and role-aware
-              perspectives to attach cleanly in the next checkpoint.
+              The auth boundary is now wired for a lightweight real session
+              layer, protected routes, and demo-safe role switching.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-border bg-background/45 p-5">
               <p className="text-xs uppercase tracking-[0.18em] text-text-muted">
-                Visual Posture
+                Session Layer
               </p>
               <p className="mt-2 font-mono text-2xl font-semibold text-text-primary">
-                Calm + premium
+                Supabase ready
               </p>
             </div>
             <div className="rounded-xl border border-border bg-background/45 p-5">
               <p className="text-xs uppercase tracking-[0.18em] text-text-muted">
-                Role Lens
+                Demo Flow
               </p>
               <p className="mt-2 font-mono text-2xl font-semibold text-text-primary">
-                Employee first
+                Role switch enabled
               </p>
             </div>
           </div>
@@ -58,39 +59,13 @@ export default function LoginPage() {
                 Sign in to your workspace
               </h2>
               <p className="max-w-md text-sm leading-7 text-text-secondary">
-                The auth boundary is staged and visually ready. The next
-                checkpoint connects this surface to Supabase and the effective
-                role system.
+                Use a real Supabase account when the environment is configured,
+                or the seeded demo identities for a zero-friction local review.
               </p>
             </div>
           </div>
 
-          <form className="space-y-4">
-            <label className="block space-y-2">
-              <span className="text-sm text-text-secondary">Work email</span>
-              <input
-                className="w-full rounded-lg border border-border bg-surface-2 px-4 py-3 text-text-primary outline-none transition-colors duration-150 focus:border-accent"
-                placeholder="priya@demo.missionos.app"
-                type="email"
-              />
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm text-text-secondary">Password</span>
-              <input
-                className="w-full rounded-lg border border-border bg-surface-2 px-4 py-3 text-text-primary outline-none transition-colors duration-150 focus:border-accent"
-                placeholder="••••••••"
-                type="password"
-              />
-            </label>
-
-            <button
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white transition-colors duration-150 hover:bg-accent-hover"
-              type="button"
-            >
-              <LockKeyhole className="h-4 w-4" />
-              Continue to workspace
-            </button>
-          </form>
+          <LoginForm />
         </div>
       </section>
     </main>

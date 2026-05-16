@@ -4,22 +4,32 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import UserSurface from "@/components/layout/user-surface";
 import { NAVIGATION_SECTIONS } from "@/features/shell/navigation";
-import type { Profile } from "@/types";
+import type { Profile, UserRole } from "@/types";
 
 interface MobileNavProps {
+  effectiveRole: UserRole;
+  isRoleOverrideActive: boolean;
   open: boolean;
   profile: Profile;
+  onSignOut: () => Promise<void>;
   onClose: () => void;
 }
 
-export default function MobileNav({ open, profile, onClose }: MobileNavProps) {
+export default function MobileNav({
+  effectiveRole,
+  isRoleOverrideActive,
+  open,
+  profile,
+  onSignOut,
+  onClose,
+}: MobileNavProps) {
   if (!open) {
     return null;
   }
 
   const visibleSections = NAVIGATION_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => item.allowedRoles.includes(profile.role)),
+    items: section.items.filter((item) => item.allowedRoles.includes(effectiveRole)),
   })).filter((section) => section.items.length > 0);
 
   return (
@@ -73,7 +83,12 @@ export default function MobileNav({ open, profile, onClose }: MobileNavProps) {
           ))}
         </div>
 
-        <UserSurface profile={profile} />
+        <UserSurface
+          effectiveRole={effectiveRole}
+          isRoleOverrideActive={isRoleOverrideActive}
+          profile={profile}
+          onSignOut={onSignOut}
+        />
       </div>
     </div>
   );

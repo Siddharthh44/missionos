@@ -4,23 +4,29 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import NavSection from "@/components/layout/nav-section";
 import UserSurface from "@/components/layout/user-surface";
 import { NAVIGATION_SECTIONS } from "@/features/shell/navigation";
-import type { Profile } from "@/types";
+import type { Profile, UserRole } from "@/types";
 import { cn } from "@/lib/cn";
 
 interface SidebarProps {
   collapsed: boolean;
+  effectiveRole: UserRole;
+  isRoleOverrideActive: boolean;
   profile: Profile;
+  onSignOut: () => Promise<void>;
   onToggle: () => void;
 }
 
 export default function Sidebar({
   collapsed,
+  effectiveRole,
+  isRoleOverrideActive,
   profile,
+  onSignOut,
   onToggle,
 }: SidebarProps) {
   const visibleSections = NAVIGATION_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => item.allowedRoles.includes(profile.role)),
+    items: section.items.filter((item) => item.allowedRoles.includes(effectiveRole)),
   })).filter((section) => section.items.length > 0);
 
   return (
@@ -70,7 +76,13 @@ export default function Sidebar({
       </div>
 
       <div className="mt-6">
-        <UserSurface profile={profile} />
+        <UserSurface
+          collapsed={collapsed}
+          effectiveRole={effectiveRole}
+          isRoleOverrideActive={isRoleOverrideActive}
+          profile={profile}
+          onSignOut={onSignOut}
+        />
       </div>
     </aside>
   );

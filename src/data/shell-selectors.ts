@@ -1,9 +1,5 @@
-import { previewActivityByRole, previewPlaceholderContent, previewProfiles, previewQuarter, previewStatsByRole } from "@/data/seed";
-import type { ActivityItem, PlaceholderSurfaceContent, Profile, ShellStat, UserRole } from "@/types";
-
-export function getPreviewProfile(role: UserRole): Profile {
-  return previewProfiles[role];
-}
+import { previewActivityByRole, previewPlaceholderContent, previewQuarter, previewStatsByRole } from "@/data/seed";
+import type { ActivityItem, PlaceholderSurfaceContent, ShellStat, UserRole } from "@/types";
 
 export function getQuarterLabel(): string {
   return `${previewQuarter.quarter.replace("-", " ")} · Mission Sync Open`;

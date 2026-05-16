@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono, Syne } from "next/font/google";
 import "./globals.css";
 import AppProviders from "@/providers/app-providers";
+import { getAuthSnapshot } from "@/features/auth/profile";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -29,17 +30,19 @@ export const metadata: Metadata = {
   description: "Where teams align, execute, and accelerate."
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const authSnapshot = await getAuthSnapshot();
+
   return (
     <html lang="en">
       <body
         className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <AppProviders>{children}</AppProviders>
+        <AppProviders initialAuthState={authSnapshot}>{children}</AppProviders>
       </body>
     </html>
   );

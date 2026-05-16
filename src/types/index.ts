@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 
 export type UserRole = "employee" | "manager" | "admin";
+export type SessionMode = "supabase" | "demo" | "none";
 
 export interface Profile {
   id: string;
@@ -10,6 +11,15 @@ export interface Profile {
   department: string | null;
   manager_id: string | null;
   avatar_url: string | null;
+}
+
+export interface AuthSnapshot {
+  realProfile: Profile | null;
+  effectiveRole: UserRole | null;
+  roleOverride: UserRole | null;
+  isAuthenticated: boolean;
+  sessionMode: SessionMode;
+  quarterLabel: string;
 }
 
 export type UomType =

@@ -9,6 +9,9 @@ import { usePathname } from "next/navigation";
 
 interface TopbarProps {
   currentRole: UserRole;
+  isRoleOverrideActive: boolean;
+  onRoleChange: (role: UserRole) => Promise<void>;
+  onSignOut: () => Promise<void>;
   profile: Profile;
   quarterLabel: string;
   onOpenMobileNav: () => void;
@@ -16,8 +19,11 @@ interface TopbarProps {
 
 export default function Topbar({
   currentRole,
+  isRoleOverrideActive,
   profile,
   quarterLabel,
+  onRoleChange,
+  onSignOut,
   onOpenMobileNav,
 }: TopbarProps) {
   const pathname = usePathname();
@@ -48,11 +54,23 @@ export default function Topbar({
         <div className="flex items-center gap-3">
           <QuarterChip label={quarterLabel} />
           <div className="hidden xl:block">
-            <RoleSwitcher currentRole={currentRole} disabled />
+            <RoleSwitcher currentRole={currentRole} onChange={(role) => void onRoleChange(role)} />
           </div>
+          {isRoleOverrideActive ? (
+            <div className="hidden rounded-full border border-accent/25 bg-accent-soft px-3 py-1.5 text-xs uppercase tracking-[0.18em] text-accent lg:block">
+              Demo view: {currentRole}
+            </div>
+          ) : null}
           <div className="hidden rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs uppercase tracking-[0.18em] text-text-muted md:block">
             {profile.department}
           </div>
+          <button
+            className="hidden rounded-full border border-border bg-surface-2 px-3 py-1.5 text-xs uppercase tracking-[0.18em] text-text-secondary transition-colors duration-150 hover:text-text-primary lg:block"
+            type="button"
+            onClick={() => void onSignOut()}
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </header>
