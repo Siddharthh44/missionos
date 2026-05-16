@@ -1,3 +1,7 @@
-import { getPlaceholderSurface, getQuarterLabel, getRoleActivity, getRoleStats } from "@/data/shell-selectors";
+import {
+  getMissionDetailSurface,
+  getOperationalSurface,
+  getQuarterLabel,
+} from "@/data/shell-selectors";
 
-export { getPlaceholderSurface, getQuarterLabel, getRoleActivity, getRoleStats };
+export { getMissionDetailSurface, getOperationalSurface, getQuarterLabel };

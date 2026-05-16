@@ -1,5 +1,13 @@
-import PlaceholderRoutePage from "@/components/shell/placeholder-route-page";
+import OperationalRoutePage from "@/components/shell/operational-route-page";
 
-export default function MissionDetailPage() {
-  return <PlaceholderRoutePage path="/missions/[id]" />;
+interface MissionDetailPageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function MissionDetailPage({
+  params,
+}: MissionDetailPageProps) {
+  return <OperationalRoutePage missionId={params.id} path="/missions/[id]" />;
 }

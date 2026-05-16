@@ -1,5 +1,5 @@
-import PlaceholderRoutePage from "@/components/shell/placeholder-route-page";
+import OperationalRoutePage from "@/components/shell/operational-route-page";
 
 export default function SyncsPage() {
-  return <PlaceholderRoutePage path="/syncs" />;
+  return <OperationalRoutePage path="/syncs" />;
 }

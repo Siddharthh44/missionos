@@ -164,3 +164,65 @@ export interface PlaceholderSurfaceContent {
   sideBody: string;
   sideHighlights: string[];
 }
+
+export type SurfaceTone =
+  | "default"
+  | "accent"
+  | "success"
+  | "warning";
+
+export interface OperationalBadge {
+  label: string;
+  tone?: SurfaceTone;
+}
+
+export interface OperationalHeroHighlight {
+  label: string;
+  value: string;
+  detail: string;
+}
+
+export interface OperationalHeroSurface {
+  label: string;
+  title: string;
+  description: string;
+  highlights: OperationalHeroHighlight[];
+  noteTitle: string;
+  noteBody: string;
+  noteHighlights: string[];
+}
+
+export interface OperationalSurfaceItem {
+  id: string;
+  title: string;
+  description: string;
+  detail?: string;
+  meta?: string[];
+  badges?: OperationalBadge[];
+  progress?: number;
+  href?: string;
+}
+
+export interface OperationalSurfaceBlock {
+  label: string;
+  title: string;
+  description: string;
+  layout?: "stack" | "grid" | "timeline";
+  items: OperationalSurfaceItem[];
+}
+
+export interface OperationalSupportPanel {
+  label: string;
+  title: string;
+  body: string;
+  highlights: string[];
+}
+
+export interface OperationalRouteSurface {
+  stats: ShellStat[];
+  hero: OperationalHeroSurface;
+  primary: OperationalSurfaceBlock;
+  secondary: OperationalSurfaceBlock;
+  support: OperationalSupportPanel[];
+  activity?: ActivityItem[];
+}
