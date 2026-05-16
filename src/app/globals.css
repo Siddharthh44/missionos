@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0b0f;
+  --foreground: #f0f2f7;
+  --surface-1: #111318;
+  --surface-2: #181b22;
+  --surface-3: #1f2330;
+  --border: #1f2330;
+  --border-strong: #2a2f3d;
+  --text-primary: #f0f2f7;
+  --text-secondary: #8891a4;
+  --text-muted: #525869;
+  --accent: #4f8ef7;
+  --accent-soft: rgba(79, 142, 247, 0.12);
+  --accent-hover: #6aa3ff;
+  --status-aligned: #22c55e;
+  --status-warning: #f59e0b;
+  --status-revision: #ef4444;
+  --status-pending: #8891a4;
+  --status-draft: #525869;
+  --status-achieved: #22c55e;
+  --status-on-track: #4f8ef7;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  background-color: var(--background);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-syne);
+}
+
+::selection {
+  background: rgba(79, 142, 247, 0.24);
+  color: var(--text-primary);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-text-primary;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .shell-container {
+    @apply mx-auto w-full max-w-screen-shell px-4 sm:px-6 lg:px-8;
+  }
+
+  .panel-surface {
+    @apply rounded-xl border border-border bg-surface-1 shadow-panel;
+  }
+
+  .subtle-copy {
+    @apply text-sm text-text-secondary;
+  }
+}
