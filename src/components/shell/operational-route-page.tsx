@@ -117,7 +117,7 @@ function ItemCard({
   );
 
   const className = cn(
-    "group rounded-xl border border-border bg-surface-2/80 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-border-strong",
+    "group rounded-xl border border-border bg-surface-2/80 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg",
     item.href && "block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60",
     layout === "timeline" && "border-l-2 border-l-accent/50",
   );
@@ -182,7 +182,7 @@ function HeroSurface({ surface }: { surface: OperationalRouteSurface }) {
           {surface.hero.highlights.map((highlight) => (
             <div
               key={highlight.label}
-              className="rounded-xl border border-border bg-surface-2/80 p-4"
+              className="rounded-xl border border-border bg-surface-2/80 p-4 transition-all duration-200 hover:border-border-strong hover:shadow-md hover:-translate-y-0.5"
             >
               <p className="text-xs uppercase tracking-[0.18em] text-text-muted">
                 {highlight.label}
@@ -208,11 +208,11 @@ function HeroSurface({ surface }: { surface: OperationalRouteSurface }) {
             {surface.hero.noteBody}
           </p>
         </div>
-        <div className="space-y-3 rounded-xl border border-border bg-background/45 p-4">
+        <div className="space-y-2">
           {surface.hero.noteHighlights.map((entry) => (
             <div
               key={entry}
-              className="rounded-lg border border-border bg-surface-2/70 px-4 py-3 text-sm leading-6 text-text-secondary"
+              className="rounded-xl border border-border/70 bg-surface-2/40 px-4 py-4 text-sm leading-7 text-text-secondary transition-colors duration-200 hover:border-border hover:bg-surface-2/65"
             >
               {entry}
             </div>

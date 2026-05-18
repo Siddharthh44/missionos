@@ -1,4 +1,6 @@
+import { LogOut } from "lucide-react";
 import type { Profile, UserRole } from "@/types";
+import { cn } from "@/lib/cn";
 
 interface UserSurfaceProps {
   collapsed?: boolean;
@@ -27,34 +29,37 @@ export default function UserSurface({
     .toUpperCase();
 
   return (
-    <div className="rounded-2xl border border-border bg-surface-2 p-3">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-sm font-semibold text-accent">
-          {initials}
-        </div>
-        {!collapsed ? (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-text-primary">
-              {profile.name}
-            </p>
-            <p className="truncate text-xs uppercase tracking-[0.18em] text-text-muted">
-              {isRoleOverrideActive
-                ? `${toLabel(profile.role)} account · ${toLabel(effectiveRole)} view`
-                : toLabel(profile.role)}
-            </p>
-          </div>
-        ) : null}
+    <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-2.5")}>
+      {/* Avatar */}
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1F2937] border border-[#374151] text-[11px] font-medium text-[#E5E7EB]">
+        {initials}
       </div>
-
-      {!collapsed ? (
+      
+      {/* Name + Role (expanded only) */}
+      {!collapsed && (
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className="truncate text-[13px] text-white/70">
+            {profile.name}
+          </p>
+          <p className="truncate text-[11px] uppercase tracking-[0.06em] text-white/35">
+            {isRoleOverrideActive
+              ? toLabel(effectiveRole)
+              : toLabel(profile.role)}
+          </p>
+        </div>
+      )}
+      
+      {/* Sign out button (expanded only) */}
+      {!collapsed && (
         <button
-          className="mt-3 inline-flex w-full items-center justify-center rounded-full border border-border px-3 py-2 text-xs uppercase tracking-[0.18em] text-text-secondary transition-colors duration-150 hover:text-text-primary"
-          type="button"
           onClick={() => void onSignOut()}
+          className="flex items-center text-white/30 transition-colors duration-150 hover:text-white/60"
+          title="Sign out"
+          type="button"
         >
-          Sign out
+          <LogOut size={14} />
         </button>
-      ) : null}
+      )}
     </div>
   );
 }

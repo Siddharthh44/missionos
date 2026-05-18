@@ -1,13 +1,5 @@
-import OperationalRoutePage from "@/components/shell/operational-route-page";
+import MissionDetailView from "@/components/missions/mission-detail-view";
 
-interface MissionDetailPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function MissionDetailPage({
-  params,
-}: MissionDetailPageProps) {
-  return <OperationalRoutePage missionId={params.id} path="/missions/[id]" />;
+export default function MissionDetailPage() {
+  return <MissionDetailView />;
 }

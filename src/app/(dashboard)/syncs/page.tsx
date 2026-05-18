@@ -1,5 +1,8 @@
-import OperationalRoutePage from "@/components/shell/operational-route-page";
+"use client";
+
+import SyncDashboard from "@/components/missions/sync-dashboard";
 
 export default function SyncsPage() {
-  return <OperationalRoutePage path="/syncs" />;
+  // All roles get the interactive sync dashboard
+  return <SyncDashboard />;
 }

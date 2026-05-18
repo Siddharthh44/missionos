@@ -20,17 +20,21 @@ export default function NavItem({ item, collapsed = false }: NavItemProps) {
   return (
     <Link
       className={cn(
-        "flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm transition-all duration-150",
+        "flex items-center rounded-md transition-all duration-150",
+        collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-3 py-[7px]",
         isActive
-          ? "border-accent/30 bg-accent-soft text-accent"
-          : "text-text-secondary hover:bg-surface-2 hover:text-text-primary",
-        collapsed && "justify-center px-2",
+          ? "bg-white/[0.08] text-[#F5F0EB]"
+          : "text-[#9CA3AF] hover:bg-white/[0.05] hover:text-white/75",
       )}
       href={item.href}
       title={collapsed ? item.label : undefined}
     >
-      <Icon className="h-[18px] w-[18px] shrink-0" />
-      {!collapsed ? <span>{item.label}</span> : null}
+      <Icon className="h-4 w-4 shrink-0" />
+      {!collapsed && (
+        <span className="text-[13px] font-normal transition-opacity duration-150">
+          {item.label}
+        </span>
+      )}
     </Link>
   );
 }

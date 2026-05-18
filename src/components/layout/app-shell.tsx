@@ -7,6 +7,7 @@ import Topbar from "@/components/layout/topbar";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useQuarter } from "@/hooks/use-quarter";
 import { useRoleContext } from "@/hooks/use-role-context";
+import { cn } from "@/lib/cn";
 
 export default function AppShell({ children }: PropsWithChildren) {
   const [collapsed, setCollapsed] = useState(false);
@@ -34,14 +35,18 @@ export default function AppShell({ children }: PropsWithChildren) {
           onSignOut={signOut}
           onToggle={() => setCollapsed((value) => !value)}
         />
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <div 
+          className={cn(
+            "flex min-h-screen min-w-0 flex-1 flex-col transition-all duration-200 ease-in-out",
+            collapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"
+          )}
+        >
           <Topbar
             currentRole={effectiveRole}
             isRoleOverrideActive={isRoleOverrideActive}
             onOpenMobileNav={() => setMobileOpen(true)}
             onRoleChange={setRole}
             onSignOut={signOut}
-            profile={profile}
             quarterLabel={quarterLabel}
           />
           <main className="shell-container flex-1 py-8">{children}</main>

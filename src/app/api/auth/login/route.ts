@@ -15,7 +15,7 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 function sanitizeRedirect(pathname: string | null | undefined) {
   if (!pathname || !pathname.startsWith("/")) {
-    return "/";
+    return "/mission-control";
   }
 
   return pathname;
@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let response = NextResponse.json({ redirectTo: "/" });
+  let response = NextResponse.json({
+  redirectTo: "/mission-control",
+  });
 
   const supabase = createRouteHandlerSupabaseClient(request, response);
 

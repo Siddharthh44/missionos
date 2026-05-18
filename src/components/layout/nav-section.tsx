@@ -12,11 +12,11 @@ export default function NavSection({
 }: NavSectionProps) {
   return (
     <div className="space-y-2">
-      {!collapsed ? (
-        <p className="px-3 text-[11px] uppercase tracking-[0.22em] text-text-muted">
+      {!collapsed && (
+        <p className="px-3 text-[10px] font-medium uppercase tracking-[0.08em] text-[#4B5563]">
           {section.label}
         </p>
-      ) : null}
+      )}
       <div className="space-y-1">
         {section.items.map((item) => (
           <NavItem key={item.href} collapsed={collapsed} item={item} />

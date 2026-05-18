@@ -13,16 +13,19 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*.log
 
 # local env files
 .env
@@ -35,3 +38,31 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# AI tooling & planning artifacts
+.kiro/
+.codex/
+.antigravity/
+.cursor/
+.agents/
+agent-transcripts/
+*.agent.md
+mds/
+main-md/
+docs/superpowers/
+
+# caches
+.cache/
+.turbo/
+.eslintcache
+.stylelintcache
+
+# OS
+Desktop.ini

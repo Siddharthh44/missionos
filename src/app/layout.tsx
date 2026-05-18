@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono, Syne } from "next/font/google";
+import { Chivo_Mono, Josefin_Sans, Noto_Sans } from "next/font/google";
 import "./globals.css";
 import AppProviders from "@/providers/app-providers";
 import { getAuthSnapshot } from "@/features/auth/profile";
 
-const syne = Syne({
+const josefinSans = Josefin_Sans({
   subsets: ["latin"],
   variable: "--font-syne",
-  weight: ["400", "500", "600", "700", "800"]
+  weight: ["400", "500", "600", "700"]
 });
 
-const dmSans = DM_Sans({
+const notoSans = Noto_Sans({
   subsets: ["latin"],
   variable: "--font-dm-sans",
   weight: ["400", "500", "600", "700"]
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const chivoMono = Chivo_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
-  weight: ["400", "500", "600"]
+  weight: ["400"]
 });
 
 export const metadata: Metadata = {
@@ -40,7 +40,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${josefinSans.variable} ${notoSans.variable} ${chivoMono.variable} antialiased`}
       >
         <AppProviders initialAuthState={authSnapshot}>{children}</AppProviders>
       </body>
