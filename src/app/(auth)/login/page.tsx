@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
+import { readRedirectSearchParam } from "@/features/auth/redirect-target";
 import { cn } from "@/lib/cn";
 import Image from "next/image";
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedDemo, setSelectedDemo] = useState<string | null>(null);
 
-  const nextPath = searchParams.get("next") ?? "/mission-control";
+  const redirectTarget = readRedirectSearchParam(searchParams.get("next"));
   const loading = isSubmitting;
 
   // Preserve existing Supabase auth logic
@@ -58,7 +59,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           email,
           password,
-          next: nextPath,
+          ...(redirectTarget ? { next: redirectTarget } : {}),
         }),
       });
 
@@ -76,8 +77,7 @@ export default function LoginPage() {
       await new Promise((resolve) => setTimeout(resolve, 250));
 
       // Full document navigation prevents App Router auth race condition
-      window.location.href =
-        payload.redirectTo ?? "/mission-control";
+      window.location.href = payload.redirectTo;
     } catch (error) {
       console.error(error);
 

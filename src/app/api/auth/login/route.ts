@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDefaultRoute, isRouteAllowed } from "@/features/shell/route-access";
+import { resolvePostAuthRedirect } from "@/features/auth/redirect-target";
 import {
   DEMO_PASSWORD,
   DEMO_SESSION_COOKIE_NAME,
@@ -13,14 +13,6 @@ import {
 import { resolveProfileFromUser } from "@/features/auth/resolve-profile";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
-function sanitizeRedirect(pathname: string | null | undefined) {
-  if (!pathname || !pathname.startsWith("/")) {
-    return "/mission-control";
-  }
-
-  return pathname;
-}
-
 function shouldUseSecureCookies(request: NextRequest) {
   return request.nextUrl.protocol === "https:";
 }
@@ -32,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   const email = body?.email?.trim().toLowerCase() ?? "";
   const password = body?.password ?? "";
-  const nextPath = sanitizeRedirect(body?.next);
+  const requestedNext = body?.next ?? null;
 
   if (!email || !password) {
     return NextResponse.json(
@@ -43,9 +35,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let response = NextResponse.json({
-  redirectTo: "/mission-control",
-  });
+  let response = NextResponse.json({});
 
   const supabase = createRouteHandlerSupabaseClient(request, response);
 
@@ -65,11 +55,10 @@ export async function POST(request: NextRequest) {
     }
 
     const realProfile = resolveProfileFromUser(data.user);
-    const defaultRoute = getDefaultRoute(realProfile?.role ?? "employee");
-    const redirectTo =
-      realProfile && isRouteAllowed(realProfile.role, nextPath)
-        ? nextPath
-        : defaultRoute;
+    const redirectTo = resolvePostAuthRedirect(
+      realProfile?.role ?? "employee",
+      requestedNext,
+    );
 
     const finalResponse = new NextResponse(JSON.stringify({ redirectTo }), {
       headers: response.headers,
@@ -93,9 +82,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const redirectTo = isRouteAllowed(demoProfile.role, nextPath)
-    ? nextPath
-    : getDefaultRoute(demoProfile.role);
+  const redirectTo = resolvePostAuthRedirect(
+    demoProfile.role,
+    requestedNext,
+  );
 
   response = NextResponse.json({ redirectTo });
   response.cookies.set(

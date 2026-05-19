@@ -6,6 +6,8 @@
 
 # testing
 /coverage
+*.lcov
+.nyc_output
 
 # next.js
 /.next/
@@ -27,9 +29,9 @@ yarn-error.log*
 pnpm-debug.log*
 *.log
 
-# local env files
+# local env files (never commit secrets)
 .env
-.env*.local
+.env.*
 !.env.example
 
 # vercel
@@ -57,6 +59,15 @@ agent-transcripts/
 mds/
 main-md/
 docs/superpowers/
+mcps/
+terminals/
+*.canvas.md
+
+# temp / backup
+*.tmp
+*.bak
+*.orig
+*~
 
 # caches
 .cache/

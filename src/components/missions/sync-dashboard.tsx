@@ -8,7 +8,15 @@ import StatusPill from "@/components/shell/status-pill";
 import ProgressMeter from "@/components/shell/progress-meter";
 import MissionSyncForm from "@/components/missions/mission-sync-form";
 import { Skeleton } from "@/components/shell/skeleton-loader";
+import OperationalEmptyState from "@/components/shell/operational-empty-state";
+import { operationalEmptyPresets } from "@/components/shell/operational-empty-presets";
+import { useToast } from "@/hooks/use-toast";
+import {
+  formatOperationalDeadline,
+  formatOperationalLabeled,
+} from "@/lib/operational-time";
 import type { Mission } from "@/types";
+import type { SyncFormData } from "@/components/missions/mission-sync-form";
 
 interface SyncItemProps {
   mission: Mission;
@@ -17,7 +25,11 @@ interface SyncItemProps {
 
 function SyncItem({ mission, onStartSync }: SyncItemProps) {
   const progress = mission.latest_sync?.progress_score || 0;
-  const dueDate = "May 18"; // Mock due date
+  const dueLabel = mission.target_date
+    ? formatOperationalDeadline(mission.target_date)
+    : formatOperationalDeadline("2026-05-18T00:00:00Z");
+  const lastSyncAt =
+    mission.latest_sync?.submitted_at ?? mission.updated_at;
   
   const getSyncStatusInfo = () => {
     if (!mission.latest_sync) {
@@ -90,7 +102,9 @@ function SyncItem({ mission, onStartSync }: SyncItemProps) {
                 <span>•</span>
                 <span>{mission.thrust_area}</span>
                 <span>•</span>
-                <span>Due: {dueDate}</span>
+                <span>{dueLabel}</span>
+                <span>•</span>
+                <span>{formatOperationalLabeled("Synced", lastSyncAt)}</span>
               </div>
               
               <div className={cn("flex items-center space-x-2", statusInfo.color)}>
@@ -265,6 +279,7 @@ const SYNC_MISSIONS: Mission[] = [
 ];
 
 export default function SyncDashboard() {
+  const toast = useToast();
   const [selectedMissionForSync, setSelectedMissionForSync] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -275,12 +290,24 @@ export default function SyncDashboard() {
   }, []);
 
   const handleStartSync = (missionId: string) => {
+    const mission = SYNC_MISSIONS.find((entry) => entry.id === missionId);
     setSelectedMissionForSync(missionId);
+    toast.info(
+      "Sync draft opened",
+      mission ? `Updating ${mission.title}.` : undefined,
+    );
   };
 
-  const handleSyncSubmit = () => {
+  const handleSyncSubmit = (data: SyncFormData) => {
+    const mission = SYNC_MISSIONS.find((entry) => entry.id === selectedMissionForSync);
+    const statusLabel = data.sync_status.replaceAll("_", " ");
+    toast.success(
+      "Sync submitted",
+      mission
+        ? `${mission.title} recorded as ${statusLabel}.`
+        : "Quarterly momentum update recorded.",
+    );
     setSelectedMissionForSync(null);
-    // In a real app, this would refresh the data
   };
 
   const handleSyncCancel = () => {
@@ -399,7 +426,9 @@ export default function SyncDashboard() {
             <Calendar className="h-4 w-4 text-accent" />
             <span className="text-sm font-medium text-text-secondary">Next Deadline</span>
           </div>
-          <div className="mt-2 text-lg font-semibold text-text-primary">May 18</div>
+          <div className="mt-2 text-lg font-semibold text-text-primary">
+            {formatOperationalDeadline("2026-05-18T00:00:00Z")}
+          </div>
         </div>
       </div>
 
@@ -447,6 +476,10 @@ export default function SyncDashboard() {
               </div>
             </div>
           )}
+
+          {pendingSyncs.length === 0 && readySyncs.length === 0 ? (
+            <OperationalEmptyState {...operationalEmptyPresets.syncsHealthy} />
+          ) : null}
         </div>
 
         {/* Sidebar */}

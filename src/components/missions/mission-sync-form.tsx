@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { CheckCircle, AlertTriangle, TrendingUp, Calendar, FileText } from "lucide-react";
+import DraftPersistenceHint from "@/components/shell/draft-persistence-hint";
+import { useToast } from "@/hooks/use-toast";
+import { useLocalDraft } from "@/hooks/use-local-draft";
+import { formatOperationalDeadline } from "@/lib/operational-time";
 import { cn } from "@/lib/cn";
 import type { SyncStatus } from "@/types";
 
-interface SyncFormData {
+export interface SyncFormData {
   actual_value: number | null;
   actual_date: string | null;
   sync_status: SyncStatus;
@@ -46,7 +50,30 @@ const SYNC_STATUS_OPTIONS: { value: SyncStatus; label: string; description: stri
   }
 ];
 
+const INITIAL_SYNC_FORM: SyncFormData = {
+  actual_value: null,
+  actual_date: null,
+  sync_status: "on_track",
+  narrative: "",
+  evidence_notes: "",
+  risks: "",
+  next_steps: "",
+};
+
+function isSyncFormEmpty(data: SyncFormData): boolean {
+  return (
+    data.actual_value === null &&
+    data.actual_date === null &&
+    data.sync_status === INITIAL_SYNC_FORM.sync_status &&
+    !data.narrative.trim() &&
+    !data.evidence_notes.trim() &&
+    !data.risks.trim() &&
+    !data.next_steps.trim()
+  );
+}
+
 export default function MissionSyncForm({
+  missionId,
   missionTitle,
   targetValue,
   targetDate,
@@ -54,20 +81,42 @@ export default function MissionSyncForm({
   onSubmit,
   onCancel
 }: MissionSyncFormProps) {
-  const [formData, setFormData] = useState<SyncFormData>({
-    actual_value: null,
-    actual_date: null,
-    sync_status: "on_track",
-    narrative: "",
-    evidence_notes: "",
-    risks: "",
-    next_steps: ""
-  });
-
+  const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const notifyRestored = useCallback(
+    () => {
+      toast.info(
+        "Draft restored",
+        "Your sync narrative and progress fields were recovered locally.",
+      );
+    },
+    [toast],
+  );
+
+  const notifySavedLocally = useCallback(
+    () => {
+      toast.info("Changes saved locally", "Sync draft stored on this device only.");
+    },
+    [toast],
+  );
+
+  const {
+    value: formData,
+    setValue: setFormData,
+    clearDraft,
+    meta: draftMeta,
+  } = useLocalDraft<SyncFormData>({
+    scope: "sync",
+    draftId: missionId,
+    initialValue: INITIAL_SYNC_FORM,
+    isEmpty: isSyncFormEmpty,
+    onRestored: notifyRestored,
+    onSavedLocally: notifySavedLocally,
+  });
+
   const updateFormData = (updates: Partial<SyncFormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +127,7 @@ export default function MissionSyncForm({
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     onSubmit?.(formData);
+    clearDraft();
     setIsSubmitting(false);
   };
 
@@ -105,6 +155,7 @@ export default function MissionSyncForm({
         <p className="text-text-secondary">
           Provide your latest progress update and narrative for this mission.
         </p>
+        <DraftPersistenceHint meta={draftMeta} className="mt-2" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -161,7 +212,8 @@ export default function MissionSyncForm({
                   className="w-full rounded-lg border border-border bg-surface-2 px-4 py-3 text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <p className="mt-1 text-sm text-text-secondary">
-                  Target: {targetDate ? new Date(targetDate).toLocaleDateString() : "Not set"}
+                  Target:{" "}
+                  {targetDate ? formatOperationalDeadline(targetDate) : "Not set"}
                 </p>
               </div>
             ) : (

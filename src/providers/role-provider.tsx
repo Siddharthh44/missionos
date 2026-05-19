@@ -8,7 +8,14 @@ import {
   type PropsWithChildren,
 } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import type { AuthSnapshot, Profile, SessionMode, UserRole } from "@/types";
+
+const ROLE_VIEW_LABELS: Record<UserRole, string> = {
+  employee: "Employee",
+  manager: "Manager",
+  admin: "Admin",
+};
 
 interface RoleContextValue {
   effectiveRole: UserRole | null;
@@ -37,6 +44,7 @@ export default function RoleProvider({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const toast = useToast();
 
   const setRole = async (role: UserRole) => {
     if (!authState.realProfile || isSubmitting) {
@@ -67,6 +75,11 @@ export default function RoleProvider({
         throw new Error("Unable to change role view.");
       }
 
+      toast.success(
+        `Switched to ${ROLE_VIEW_LABELS[payload.effectiveRole]} view`,
+        "Operational surfaces updated for the selected role.",
+      );
+
       setAuthState((current) => ({
         ...current,
         effectiveRole: payload.effectiveRole ?? current.effectiveRole,
@@ -84,6 +97,8 @@ export default function RoleProvider({
 
         router.refresh();
       });
+    } catch {
+      toast.error("Unable to change role view", "Try again in a moment.");
     } finally {
       setIsSubmitting(false);
     }

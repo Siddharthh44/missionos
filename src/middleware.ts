@@ -4,6 +4,7 @@ import {
   resolveEffectiveRole,
 } from "@/features/auth/effective-role";
 import { resolveProfileFromUser } from "@/features/auth/resolve-profile";
+import { resolvePostAuthRedirect } from "@/features/auth/redirect-target";
 import { getDefaultRoute, isRouteAllowed } from "@/features/shell/route-access";
 import {
   DEMO_SESSION_COOKIE_NAME,
@@ -32,9 +33,10 @@ export async function middleware(request: NextRequest) {
     : null;
 
   if (pathname === "/login" && effectiveRole) {
-    return NextResponse.redirect(
-      new URL(getDefaultRoute(effectiveRole), request.url),
-    );
+    const nextParam = request.nextUrl.searchParams.get("next");
+    const redirectPath = resolvePostAuthRedirect(effectiveRole, nextParam);
+
+    return NextResponse.redirect(new URL(redirectPath, request.url));
   }
 
   if (isPublicPath(pathname)) {

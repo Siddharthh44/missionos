@@ -1,36 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
+import { resolvePostAuthRedirect } from "@/features/auth/redirect-target";
+import { resolveProfileFromUser } from "@/features/auth/resolve-profile";
+import { getDefaultRoute } from "@/features/shell/route-access";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const { origin, searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  let nextPath = searchParams.get("next") ?? "/";
-
-  if (!nextPath.startsWith("/")) {
-    nextPath = "/";
-  }
+  const requestedNext = searchParams.get("next");
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login`);
   }
 
-  // Create response object first so Supabase can set cookies on it
-  const response = NextResponse.redirect(`${origin}${nextPath}`);
-  const supabase = createRouteHandlerSupabaseClient(request, response);
+  const provisionalResponse = NextResponse.next();
+  const supabase = createRouteHandlerSupabaseClient(request, provisionalResponse);
 
   if (!supabase) {
     return NextResponse.redirect(`${origin}/login`);
   }
 
-  // Exchange code for session - this sets cookies on the response object
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-  if (error) {
+  if (error || !data.user) {
     return NextResponse.redirect(`${origin}/login`);
   }
 
-  // Add cache control headers to prevent caching of the redirect
-  // This ensures subsequent requests see the fresh session cookie
+  const profile = resolveProfileFromUser(data.user);
+  const redirectPath = profile
+    ? resolvePostAuthRedirect(profile.role, requestedNext)
+    : getDefaultRoute("employee");
+
+  const response = NextResponse.redirect(`${origin}${redirectPath}`);
+
+  provisionalResponse.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+
   response.headers.set("Cache-Control", "private, no-store, max-age=0");
 
   return response;

@@ -2,6 +2,7 @@
 
 import type { PropsWithChildren } from "react";
 import RoleProvider from "@/providers/role-provider";
+import ToastProvider from "@/providers/toast-provider";
 import type { AuthSnapshot } from "@/types";
 
 interface AppProvidersProps extends PropsWithChildren {
@@ -12,5 +13,9 @@ export default function AppProviders({
   children,
   initialAuthState,
 }: AppProvidersProps) {
-  return <RoleProvider initialState={initialAuthState}>{children}</RoleProvider>;
+  return (
+    <ToastProvider>
+      <RoleProvider initialState={initialAuthState}>{children}</RoleProvider>
+    </ToastProvider>
+  );
 }

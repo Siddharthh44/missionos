@@ -4,14 +4,24 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/layout/page-header";
 import ActivityFeed from "@/components/dashboard/activity-feed";
+import OperationalEmptyState from "@/components/shell/operational-empty-state";
+import { operationalEmptyPresets } from "@/components/shell/operational-empty-presets";
 import ProgressMeter from "@/components/shell/progress-meter";
 import SectionLabel from "@/components/shell/section-label";
 import ShellCard from "@/components/shell/shell-card";
 import StatsStrip from "@/components/shell/stats-strip";
+import AIInsightCard from "@/components/shell/ai-insight-card";
+import AnalyticsWidget from "@/components/shell/analytics-widget";
+import ExecutiveBriefingSurface from "@/components/shell/executive-briefing-surface";
+import MissionHealthFleetSummary from "@/components/shell/mission-health-fleet-summary";
+import MissionHealthStrip from "@/components/shell/mission-health-strip";
 import StatusPill from "@/components/shell/status-pill";
+import { getMissionById, MISSION_CATALOG } from "@/data/mission-catalog";
+import { getMissionHealth } from "@/features/missions/mission-health";
 import { getOperationalSurface } from "@/features/shell/shell-data";
 import { ROUTE_META } from "@/features/shell/route-meta";
 import { useRoleContext } from "@/hooks/use-role-context";
+import { formatOperationalRelative } from "@/lib/operational-time";
 import { cn } from "@/lib/cn";
 import type {
   OperationalRouteSurface,
@@ -66,13 +76,25 @@ function HeaderAction({
   );
 }
 
-function ItemCard({
+function missionIdFromHref(href?: string) {
+  if (!href?.startsWith("/missions/") || href === "/missions/new") {
+    return null;
+  }
+
+  return href.replace("/missions/", "");
+}
+
+export function ItemCard({
   item,
   layout = "stack",
 }: {
   item: OperationalSurfaceItem;
   layout?: OperationalSurfaceBlock["layout"];
 }) {
+  const missionId = missionIdFromHref(item.href);
+  const mission = missionId ? getMissionById(missionId) : undefined;
+  const missionHealth = mission ? getMissionHealth(mission) : null;
+
   const content = (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -106,11 +128,22 @@ function ItemCard({
 
       {item.progress !== undefined ? <ProgressMeter value={item.progress} /> : null}
 
-      {item.meta?.length ? (
+      {missionHealth ? (
+        <MissionHealthStrip health={missionHealth} variant="compact" />
+      ) : null}
+
+      {item.meta?.length || mission ? (
         <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] uppercase tracking-[0.18em] text-text-muted">
-          {item.meta.map((entry) => (
-            <span key={`${item.id}-${entry}`}>{entry}</span>
-          ))}
+          {(item.meta ?? [])
+            .filter((entry) => !entry.toLowerCase().startsWith("updated:"))
+            .map((entry) => (
+              <span key={`${item.id}-${entry}`}>{entry}</span>
+            ))}
+          {mission ? (
+            <span key={`${item.id}-updated`}>
+              Updated {formatOperationalRelative(mission.updated_at)}
+            </span>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -133,13 +166,24 @@ function ItemCard({
   return <div className={className}>{content}</div>;
 }
 
-function SurfaceBlockCard({ block }: { block: OperationalSurfaceBlock }) {
+export function SurfaceBlockCard({
+  block,
+  compact = false,
+}: {
+  block: OperationalSurfaceBlock;
+  compact?: boolean;
+}) {
   return (
     <ShellCard className="space-y-5">
       <div className="space-y-3">
         <SectionLabel label={block.label} />
         <div className="space-y-2">
-          <h2 className="font-display text-2xl font-semibold text-text-primary">
+          <h2
+            className={cn(
+              "font-display font-semibold text-text-primary",
+              compact ? "text-lg" : "text-2xl",
+            )}
+          >
             {block.title}
           </h2>
           <p className="text-sm leading-7 text-text-secondary">
@@ -154,17 +198,35 @@ function SurfaceBlockCard({ block }: { block: OperationalSurfaceBlock }) {
           "grid-cols-1": block.layout !== "grid",
         })}
       >
-        {block.items.map((entry) => (
-          <ItemCard key={entry.id} item={entry} layout={block.layout} />
-        ))}
+        {block.items.length === 0 ? (
+          <OperationalEmptyState
+            {...operationalEmptyPresets.surfaceBlockEmpty}
+            compact
+          />
+        ) : (
+          block.items.map((entry) => (
+            <ItemCard key={entry.id} item={entry} layout={block.layout} />
+          ))
+        )}
       </div>
     </ShellCard>
   );
 }
 
-function HeroSurface({ surface }: { surface: OperationalRouteSurface }) {
+export function HeroSurface({
+  surface,
+  compact = false,
+}: {
+  surface: OperationalRouteSurface;
+  compact?: boolean;
+}) {
   return (
-    <div className="grid gap-4 xl:grid-cols-[1.18fr_0.82fr]">
+    <div
+      className={cn(
+        "grid gap-4",
+        compact ? "grid-cols-1" : "xl:grid-cols-[1.18fr_0.82fr]",
+      )}
+    >
       <ShellCard className="space-y-6">
         <div className="space-y-3">
           <SectionLabel label={surface.hero.label} />
@@ -232,6 +294,10 @@ export default function OperationalRoutePage({
   const surface = getOperationalSurface(path, role, missionId);
   const meta = ROUTE_META[path];
   const action = HEADER_ACTIONS[path];
+  const mission =
+    path === "/missions/[id]" && missionId ? getMissionById(missionId) : undefined;
+  const missionHealth = mission ? getMissionHealth(mission) : null;
+  const showExecutiveBriefing = path === "/" || path === "/insights";
 
   return (
     <div className="space-y-8">
@@ -249,6 +315,54 @@ export default function OperationalRoutePage({
         }
       />
 
+      {missionHealth ? (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <MissionHealthStrip health={missionHealth} variant="inline" />
+          <AnalyticsWidget
+            title="Health score"
+            value={missionHealth.score}
+            variant={
+              missionHealth.status === "healthy"
+                ? "success"
+                : missionHealth.status === "critical" ||
+                    missionHealth.status === "at_risk"
+                  ? "warning"
+                  : "accent"
+            }
+            size="sm"
+          />
+        </div>
+      ) : null}
+
+      {missionHealth ? (
+        <AIInsightCard
+          title="Mission health interpretation"
+          insight={missionHealth.insight}
+          recommendation={missionHealth.recommendation}
+          confidence={missionHealth.confidence}
+          generatedAt={mission?.updated_at}
+          type={missionHealth.insightType}
+          impact={
+            missionHealth.urgency === "critical" || missionHealth.urgency === "high"
+              ? "high"
+              : missionHealth.urgency === "medium"
+                ? "medium"
+                : "low"
+          }
+        />
+      ) : null}
+
+      {showExecutiveBriefing ? (
+        <ExecutiveBriefingSurface
+          missions={MISSION_CATALOG}
+          compact={path === "/insights"}
+        />
+      ) : null}
+
+      {path === "/insights" ? (
+        <MissionHealthFleetSummary missions={MISSION_CATALOG} />
+      ) : null}
+
       <StatsStrip stats={surface.stats} />
       <HeroSurface surface={surface} />
 
@@ -257,7 +371,7 @@ export default function OperationalRoutePage({
         <SurfaceBlockCard block={surface.secondary} />
       </div>
 
-      {surface.activity?.length ? <ActivityFeed items={surface.activity} /> : null}
+      <ActivityFeed items={surface.activity ?? []} />
 
       <div
         className={cn("grid gap-4", {

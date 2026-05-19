@@ -1,6 +1,7 @@
 "use client";
 
 import { Brain, Lightbulb, AlertTriangle, CheckCircle, TrendingUp, Target } from "lucide-react";
+import { formatOperationalRelative } from "@/lib/operational-time";
 import { cn } from "@/lib/cn";
 
 interface AIInsightCardProps {
@@ -10,6 +11,7 @@ interface AIInsightCardProps {
   confidence: "high" | "medium" | "low";
   type: "pattern" | "risk" | "opportunity" | "recommendation";
   impact?: "high" | "medium" | "low";
+  generatedAt?: string | Date;
   className?: string;
 }
 
@@ -64,7 +66,8 @@ export default function AIInsightCard({
   confidence,
   type,
   impact,
-  className
+  generatedAt,
+  className,
 }: AIInsightCardProps) {
   const confidenceStyle = CONFIDENCE_STYLES[confidence];
   const typeStyle = TYPE_STYLES[type];
@@ -126,7 +129,9 @@ export default function AIInsightCard({
           <div className="flex items-center space-x-4 text-sm text-text-muted">
             <span>AI Analysis</span>
             <span>•</span>
-            <span>Generated: Just now</span>
+            <span>
+              Updated {formatOperationalRelative(generatedAt ?? "2026-05-19T11:55:00Z")}
+            </span>
           </div>
           
           {impact && (

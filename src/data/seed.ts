@@ -67,21 +67,21 @@ const employeeActivity: ActivityItem[] = [
     title: "Reliability Control Plane moved into final integration",
     description:
       "Your API resilience mission now has the June 23 release gate attached to the quarter plan.",
-    timestamp: "May 16, 10:20",
+    timestamp: "2026-05-16T10:20:00Z",
   },
   {
     id: "activity-employee-2",
     title: "Partner onboarding milestone acknowledged",
     description:
       "Arjun added a note highlighting activation gains from the latest onboarding sequence cleanup.",
-    timestamp: "May 15, 17:10",
+    timestamp: "2026-05-15T17:10:00Z",
   },
   {
     id: "activity-employee-3",
     title: "Sync evidence bundle requested",
     description:
       "You have two missions that need a concise before-and-after narrative before the next check-in window.",
-    timestamp: "May 14, 14:35",
+    timestamp: "2026-05-14T14:35:00Z",
   },
 ];
 
@@ -91,21 +91,21 @@ const managerActivity: ActivityItem[] = [
     title: "Three direct reports updated this week's narrative",
     description:
       "Priya, Rahul, and Sneha all pushed fresh context into their mission summaries before standup.",
-    timestamp: "May 16, 09:40",
+    timestamp: "2026-05-16T09:40:00Z",
   },
   {
     id: "activity-manager-2",
     title: "Incident review cadence slipped below the safe range",
     description:
       "The weekly remediation loop is now one sync behind and needs a clearer owner handoff.",
-    timestamp: "May 15, 15:20",
+    timestamp: "2026-05-15T15:20:00Z",
   },
   {
     id: "activity-manager-3",
     title: "Leadership review queue widened",
     description:
       "Two missions need tighter success metrics before they are ready for cross-functional review.",
-    timestamp: "May 14, 11:50",
+    timestamp: "2026-05-14T11:50:00Z",
   },
 ];
 
@@ -115,21 +115,21 @@ const adminActivity: ActivityItem[] = [
     title: "Shared launch readiness pack propagated to three departments",
     description:
       "Engineering, Revenue, and Support now share the same launch checkpoint narrative for the quarter close.",
-    timestamp: "May 16, 08:35",
+    timestamp: "2026-05-16T08:35:00Z",
   },
   {
     id: "activity-admin-2",
     title: "Org momentum snapshot refreshed for leadership prep",
     description:
       "Department progress, review pressure, and governance watchpoints were consolidated for the Friday brief.",
-    timestamp: "May 15, 16:05",
+    timestamp: "2026-05-15T16:05:00Z",
   },
   {
     id: "activity-admin-3",
     title: "Role override and access trail remained clean",
     description:
       "No permission drift surfaced in the latest audit pass across admin and shared mission surfaces.",
-    timestamp: "May 14, 09:10",
+    timestamp: "2026-05-14T09:10:00Z",
   },
 ];
 

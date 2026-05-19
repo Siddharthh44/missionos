@@ -21,11 +21,11 @@ export const ROUTE_META: Record<string, PageMeta> = {
   },
   "/missions/[id]": {
     title: "Mission Detail",
-    subtitle: "Context, history, and mission state live here once the workflow layer arrives.",
+    subtitle: "Context, history, and mission state for the active delivery lane.",
   },
   "/syncs": {
     title: "Mission Sync",
-    subtitle: "Quarterly momentum updates will attach to this operational check-in surface.",
+    subtitle: "Quarterly momentum check-ins, sync cadence, and review readiness.",
   },
   "/team": {
     title: "Team Momentum",
@@ -37,7 +37,7 @@ export const ROUTE_META: Record<string, PageMeta> = {
   },
   "/insights": {
     title: "Momentum Insights",
-    subtitle: "Ambient intelligence surfaces live here once insights are connected.",
+    subtitle: "Portfolio health, executive briefing, and operational risk signals.",
   },
   "/admin": {
     title: "Workspace Admin",
@@ -45,11 +45,11 @@ export const ROUTE_META: Record<string, PageMeta> = {
   },
   "/admin/shared-missions": {
     title: "Shared Missions",
-    subtitle: "Shared KPI propagation will connect to this route without changing the shell.",
+    subtitle: "Cross-team KPI propagation and shared mission governance.",
   },
   "/admin/audit": {
     title: "Audit Trail",
-    subtitle: "Change visibility and governance history are reserved for this admin surface.",
+    subtitle: "Change visibility and governance history across the workspace.",
   },
 };
 

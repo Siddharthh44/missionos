@@ -1,18 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useCallback, useState } from "react";
+import DraftPersistenceHint from "@/components/shell/draft-persistence-hint";
+import { useLocalDraft } from "@/hooks/use-local-draft";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { Plus, Filter, Search, ChevronRight } from "lucide-react";
+import { Filter, Plus, Search, ChevronDown, ChevronRight } from "lucide-react";
+import OperationalEmptyState from "@/components/shell/operational-empty-state";
+import { operationalEmptyPresets } from "@/components/shell/operational-empty-presets";
+import MissionInlineDetailSurface from "@/components/missions/mission-inline-detail-surface";
 import StatusPill from "@/components/shell/status-pill";
 import ProgressMeter from "@/components/shell/progress-meter";
-import type { Mission, OperationalBadge } from "@/types";
+import { MISSION_CATALOG } from "@/data/mission-catalog";
+import { getMissionHealth } from "@/features/missions/mission-health";
+import {
+  formatOperationalDeadline,
+  formatOperationalRelative,
+} from "@/lib/operational-time";
+import MissionHealthStrip from "@/components/shell/mission-health-strip";
+import { getMissionDetailSurface } from "@/features/shell/shell-data";
+import { useRoleContext } from "@/hooks/use-role-context";
+import { cn } from "@/lib/cn";
+import type { Mission, OperationalBadge, UserRole } from "@/types";
 
 interface MissionCardProps {
   mission: Mission;
   showOwner?: boolean;
+  isExpanded?: boolean;
+  onToggle: () => void;
 }
 
-function MissionCard({ mission, showOwner = false }: MissionCardProps) {
+function MissionCard({
+  mission,
+  showOwner = false,
+  isExpanded = false,
+  onToggle,
+}: MissionCardProps) {
+  const health = getMissionHealth(mission);
   const progress = mission.latest_sync?.progress_score || 0;
   
   const getStatusBadge = (): OperationalBadge => {
@@ -52,9 +76,16 @@ function MissionCard({ mission, showOwner = false }: MissionCardProps) {
   };
 
   return (
-    <Link
-      href={`/missions/${mission.id}`}
-      className="group block rounded-xl border border-border bg-surface-1 p-6 transition-all duration-200 hover:border-border-strong hover:shadow-lg hover:-translate-y-0.5"
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={isExpanded}
+      className={cn(
+        "group block w-full rounded-xl border bg-surface-1 p-6 text-left transition-all duration-200 hover:border-border-strong hover:shadow-lg hover:-translate-y-0.5",
+        isExpanded
+          ? "border-accent/30 ring-1 ring-accent/20"
+          : "border-border",
+      )}
     >
       <div className="space-y-4">
         <div className="flex items-start justify-between">
@@ -63,7 +94,11 @@ function MissionCard({ mission, showOwner = false }: MissionCardProps) {
               <h3 className="font-display text-lg font-semibold text-text-primary group-hover:text-accent transition-colors duration-200">
                 {mission.title}
               </h3>
-              <ChevronRight className="h-4 w-4 text-text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 text-accent" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-text-muted transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-accent" />
+              )}
             </div>
             <p className="mt-2 text-sm leading-6 text-text-secondary line-clamp-2">
               {mission.description}
@@ -81,6 +116,8 @@ function MissionCard({ mission, showOwner = false }: MissionCardProps) {
             {mission.is_shared && <StatusPill badge={{ label: "Shared", tone: "accent" }} />}
           </div>
 
+          <MissionHealthStrip health={health} variant="compact" />
+
           <div className="flex items-center justify-between text-sm text-text-muted">
             <div className="flex items-center space-x-4">
               {showOwner && mission.employee && (
@@ -91,15 +128,53 @@ function MissionCard({ mission, showOwner = false }: MissionCardProps) {
               )}
               <span>{mission.thrust_area}</span>
               <span>•</span>
-              <span>Updated: {new Date(mission.updated_at).toLocaleDateString()}</span>
+              <span>Updated {formatOperationalRelative(mission.updated_at)}</span>
             </div>
-            {mission.target_date && (
-              <span>Due: {new Date(mission.target_date).toLocaleDateString()}</span>
-            )}
+            {mission.target_date ? (
+              <span>{formatOperationalDeadline(mission.target_date)}</span>
+            ) : null}
           </div>
         </div>
       </div>
-    </Link>
+    </button>
+  );
+}
+
+interface MissionGridProps {
+  missions: Mission[];
+  showOwners: boolean;
+  expandedMissionId: string | null;
+  effectiveRole: UserRole;
+  onToggleMission: (missionId: string) => void;
+}
+
+function MissionGrid({
+  missions,
+  showOwners,
+  expandedMissionId,
+  effectiveRole,
+  onToggleMission,
+}: MissionGridProps) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {missions.map((mission) => (
+        <Fragment key={mission.id}>
+          <MissionCard
+            mission={mission}
+            showOwner={showOwners}
+            isExpanded={expandedMissionId === mission.id}
+            onToggle={() => onToggleMission(mission.id)}
+          />
+          {expandedMissionId === mission.id ? (
+            <MissionInlineDetailSurface
+              mission={mission}
+              onClose={() => onToggleMission(mission.id)}
+              surface={getMissionDetailSurface(effectiveRole, mission.id)}
+            />
+          ) : null}
+        </Fragment>
+      ))}
+    </div>
   );
 }
 
@@ -109,213 +184,74 @@ interface MissionBoardProps {
   showOwners?: boolean;
 }
 
-// Mock missions data based on seeded operational surfaces
-const MOCK_MISSIONS: Mission[] = [
-  {
-    id: "mission-reliability-control-plane",
-    employee_id: "profile-priya",
-    title: "Reliability Control Plane",
-    description: "Reduce Sev-2 recovery time by standardizing rollback controls across the API gateway and worker fleet.",
-    thrust_area: "Platform",
-    uom_type: "numeric_min",
-    target_value: 25,
-    target_date: "2026-06-23",
-    impact_score: 5,
-    status: "aligned",
-    is_shared: false,
-    shared_source_id: null,
-    quarter: "Q2-2026",
-    year: 2026,
-    locked_at: null,
-    created_at: "2026-04-15T10:00:00Z",
-    updated_at: "2026-05-16T10:20:00Z",
-    employee: {
-      id: "profile-priya",
-      name: "Priya Sharma",
-      email: "priya@demo.missionos.app",
-      role: "employee",
-      department: "Engineering",
-      manager_id: "profile-arjun",
-      avatar_url: null,
-    },
-    latest_sync: {
-      id: "sync-reliability-latest",
-      mission_id: "mission-reliability-control-plane",
-      quarter: "Q2-2026",
-      actual_value: 32,
-      actual_date: null,
-      sync_status: "on_track",
-      progress_score: 82,
-      submitted_at: "2026-05-16T10:20:00Z",
-      created_at: "2026-05-16T10:20:00Z",
-    }
-  },
-  {
-    id: "mission-onboarding-activation-loop",
-    employee_id: "profile-rahul",
-    title: "Onboarding Activation Loop",
-    description: "Lift week-one activation by tightening handoff copy, setup prompts, and success cues for partner teams.",
-    thrust_area: "Product Growth",
-    uom_type: "percentage_max",
-    target_value: 85,
-    target_date: null,
-    impact_score: 4,
-    status: "aligned",
-    is_shared: false,
-    shared_source_id: null,
-    quarter: "Q2-2026",
-    year: 2026,
-    locked_at: null,
-    created_at: "2026-04-12T09:00:00Z",
-    updated_at: "2026-05-15T17:10:00Z",
-    employee: {
-      id: "profile-rahul",
-      name: "Rahul Mehta",
-      email: "rahul@demo.missionos.app",
-      role: "employee",
-      department: "Product Growth",
-      manager_id: "profile-arjun",
-      avatar_url: null,
-    },
-    latest_sync: {
-      id: "sync-activation-latest",
-      mission_id: "mission-onboarding-activation-loop",
-      quarter: "Q2-2026",
-      actual_value: 74,
-      actual_date: null,
-      sync_status: "on_track",
-      progress_score: 74,
-      submitted_at: "2026-05-15T17:10:00Z",
-      created_at: "2026-05-15T17:10:00Z",
-    }
-  },
-  {
-    id: "mission-deal-desk-turnaround",
-    employee_id: "profile-sneha",
-    title: "Deal Desk Turnaround",
-    description: "Cut redline turnaround time for strategic deals by tightening request routing and escalation coverage.",
-    thrust_area: "Revenue Ops",
-    uom_type: "numeric_min",
-    target_value: 2,
-    target_date: null,
-    impact_score: 4,
-    status: "awaiting_review",
-    is_shared: false,
-    shared_source_id: null,
-    quarter: "Q2-2026",
-    year: 2026,
-    locked_at: null,
-    created_at: "2026-04-18T11:00:00Z",
-    updated_at: "2026-05-15T14:05:00Z",
-    employee: {
-      id: "profile-sneha",
-      name: "Sneha Iyer",
-      email: "sneha@demo.missionos.app",
-      role: "employee",
-      department: "Revenue Ops",
-      manager_id: "profile-arjun",
-      avatar_url: null,
-    },
-    latest_sync: {
-      id: "sync-deal-desk-latest",
-      mission_id: "mission-deal-desk-turnaround",
-      quarter: "Q2-2026",
-      actual_value: 3.2,
-      actual_date: null,
-      sync_status: "on_track",
-      progress_score: 61,
-      submitted_at: "2026-05-15T14:05:00Z",
-      created_at: "2026-05-15T14:05:00Z",
-    }
-  },
-  {
-    id: "mission-incident-review-cadence",
-    employee_id: "profile-dev",
-    title: "Incident Review Cadence",
-    description: "Restore weekly incident closure discipline by aligning action owners, due dates, and review rituals.",
-    thrust_area: "Quality",
-    uom_type: "percentage_max",
-    target_value: 95,
-    target_date: null,
-    impact_score: 3,
-    status: "needs_revision",
-    is_shared: false,
-    shared_source_id: null,
-    quarter: "Q2-2026",
-    year: 2026,
-    locked_at: null,
-    created_at: "2026-04-20T14:00:00Z",
-    updated_at: "2026-05-14T11:50:00Z",
-    employee: {
-      id: "profile-dev",
-      name: "Dev Malhotra",
-      email: "dev@demo.missionos.app",
-      role: "employee",
-      department: "Quality",
-      manager_id: "profile-arjun",
-      avatar_url: null,
-    },
-    latest_sync: {
-      id: "sync-incident-latest",
-      mission_id: "mission-incident-review-cadence",
-      quarter: "Q2-2026",
-      actual_value: 78,
-      actual_date: null,
-      sync_status: "ready_to_start",
-      progress_score: 54,
-      submitted_at: "2026-05-14T11:50:00Z",
-      created_at: "2026-05-14T11:50:00Z",
-    }
-  },
-  {
-    id: "mission-hiring-loop-compression",
-    employee_id: "profile-meera",
-    title: "Hiring Loop Compression",
-    description: "Bring interview cycle time under nine business days without eroding hiring manager quality signals.",
-    thrust_area: "People Ops",
-    uom_type: "numeric_min",
-    target_value: 9,
-    target_date: null,
-    impact_score: 4,
-    status: "aligned",
-    is_shared: false,
-    shared_source_id: null,
-    quarter: "Q2-2026",
-    year: 2026,
-    locked_at: null,
-    created_at: "2026-04-22T16:00:00Z",
-    updated_at: "2026-05-16T15:30:00Z",
-    employee: {
-      id: "profile-meera",
-      name: "Meera Rao",
-      email: "meera@demo.missionos.app",
-      role: "employee",
-      department: "People Ops",
-      manager_id: "profile-neha",
-      avatar_url: null,
-    },
-    latest_sync: {
-      id: "sync-hiring-latest",
-      mission_id: "mission-hiring-loop-compression",
-      quarter: "Q2-2026",
-      actual_value: 11,
-      actual_date: null,
-      sync_status: "on_track",
-      progress_score: 67,
-      submitted_at: "2026-05-16T15:30:00Z",
-      created_at: "2026-05-16T15:30:00Z",
-    }
-  }
-];
+interface BoardFiltersDraft {
+  searchQuery: string;
+  statusFilter: string;
+  thrustAreaFilter: string;
+}
+
+const INITIAL_BOARD_FILTERS: BoardFiltersDraft = {
+  searchQuery: "",
+  statusFilter: "all",
+  thrustAreaFilter: "all",
+};
+
+function isBoardFiltersEmpty(filters: BoardFiltersDraft): boolean {
+  return (
+    filters.searchQuery === "" &&
+    filters.statusFilter === "all" &&
+    filters.thrustAreaFilter === "all"
+  );
+}
 
 export default function MissionBoard({ 
-  missions = MOCK_MISSIONS,
+  missions = MISSION_CATALOG,
   showFilters = true,
   showOwners = false
 }: MissionBoardProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [thrustAreaFilter, setThrustAreaFilter] = useState<string>("all");
+  const { effectiveRole } = useRoleContext();
+  const [expandedMissionId, setExpandedMissionId] = useState<string | null>(null);
+  const toast = useToast();
+  const role = effectiveRole ?? "employee";
+
+  const notifyFiltersRestored = useCallback(
+    () => {
+      toast.info("Draft restored", "Mission board filters recovered on this device.");
+    },
+    [toast],
+  );
+
+  const {
+    value: boardFilters,
+    setValue: setBoardFilters,
+    meta: boardFiltersMeta,
+  } = useLocalDraft<BoardFiltersDraft>({
+    scope: "mission-board-filters",
+    draftId: role,
+    initialValue: INITIAL_BOARD_FILTERS,
+    isEmpty: isBoardFiltersEmpty,
+    onRestored: notifyFiltersRestored,
+  });
+
+  const searchQuery = boardFilters.searchQuery;
+  const statusFilter = boardFilters.statusFilter;
+  const thrustAreaFilter = boardFilters.thrustAreaFilter;
+
+  const setSearchQuery = (value: string) => {
+    setBoardFilters((prev) => ({ ...prev, searchQuery: value }));
+  };
+
+  const setStatusFilter = (value: string) => {
+    setBoardFilters((prev) => ({ ...prev, statusFilter: value }));
+  };
+
+  const setThrustAreaFilter = (value: string) => {
+    setBoardFilters((prev) => ({ ...prev, thrustAreaFilter: value }));
+  };
+
+  const handleToggleMission = (missionId: string) => {
+    setExpandedMissionId((current) => (current === missionId ? null : missionId));
+  };
 
   // Filter missions based on search and filters
   const filteredMissions = missions.filter(mission => {
@@ -362,6 +298,7 @@ export default function MissionBoard({
 
       {/* Filters */}
       {showFilters && (
+        <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-surface-1 p-4">
           <div className="flex items-center space-x-2">
             <Search className="h-4 w-4 text-text-muted" />
@@ -400,6 +337,10 @@ export default function MissionBoard({
             ))}
           </select>
         </div>
+        {!isBoardFiltersEmpty(boardFilters) ? (
+          <DraftPersistenceHint meta={boardFiltersMeta} className="px-1" />
+        ) : null}
+        </div>
       )}
 
       {/* Mission Groups */}
@@ -415,11 +356,13 @@ export default function MissionBoard({
                 {groupedMissions.healthy.length}
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {groupedMissions.healthy.map(mission => (
-                <MissionCard key={mission.id} mission={mission} showOwner={showOwners} />
-              ))}
-            </div>
+            <MissionGrid
+              missions={groupedMissions.healthy}
+              showOwners={showOwners}
+              expandedMissionId={expandedMissionId}
+              effectiveRole={role}
+              onToggleMission={handleToggleMission}
+            />
           </div>
         )}
 
@@ -434,11 +377,13 @@ export default function MissionBoard({
                 {groupedMissions.attention.length}
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {groupedMissions.attention.map(mission => (
-                <MissionCard key={mission.id} mission={mission} showOwner={showOwners} />
-              ))}
-            </div>
+            <MissionGrid
+              missions={groupedMissions.attention}
+              showOwners={showOwners}
+              expandedMissionId={expandedMissionId}
+              effectiveRole={role}
+              onToggleMission={handleToggleMission}
+            />
           </div>
         )}
 
@@ -453,39 +398,26 @@ export default function MissionBoard({
                 {groupedMissions.draft.length}
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {groupedMissions.draft.map(mission => (
-                <MissionCard key={mission.id} mission={mission} showOwner={showOwners} />
-              ))}
-            </div>
+            <MissionGrid
+              missions={groupedMissions.draft}
+              showOwners={showOwners}
+              expandedMissionId={expandedMissionId}
+              effectiveRole={role}
+              onToggleMission={handleToggleMission}
+            />
           </div>
         )}
       </div>
 
-      {/* Empty State */}
-      {filteredMissions.length === 0 && (
-        <div className="rounded-xl border border-border bg-surface-1 p-12 text-center">
-          <div className="mx-auto max-w-md">
-            <h3 className="font-display text-lg font-semibold text-text-primary">
-              No missions found
-            </h3>
-            <p className="mt-2 text-text-secondary">
-              {searchQuery || statusFilter !== "all" || thrustAreaFilter !== "all"
-                ? "Try adjusting your search or filters."
-                : "Get started by creating your first mission."}
-            </p>
-            {(!searchQuery && statusFilter === "all" && thrustAreaFilter === "all") && (
-              <Link
-                href="/missions/new"
-                className="mt-4 inline-flex items-center space-x-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create Mission</span>
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
+      {filteredMissions.length === 0 ? (
+        <OperationalEmptyState
+          {...(searchQuery ||
+          statusFilter !== "all" ||
+          thrustAreaFilter !== "all"
+            ? operationalEmptyPresets.missionsFiltered
+            : operationalEmptyPresets.missionsCatalog)}
+        />
+      ) : null}
     </div>
   );
 }

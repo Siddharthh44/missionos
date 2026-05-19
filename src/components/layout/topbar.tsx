@@ -1,6 +1,7 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
+import { openCommandPalette } from "@/components/command-palette/command-palette-root";
 import QuarterChip from "@/components/layout/quarter-chip";
 import RoleSwitcher from "@/components/layout/role-switcher";
 import type { UserRole } from "@/types";
@@ -42,6 +43,19 @@ export default function Topbar({
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            aria-label="Open command palette"
+            className="hidden items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 text-xs text-text-secondary transition-colors duration-150 hover:text-text-primary sm:inline-flex"
+            type="button"
+            onClick={openCommandPalette}
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Search</span>
+            <kbd className="rounded border border-border bg-background px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
+              ⌘K
+            </kbd>
+          </button>
+
           <div className="hidden xl:block">
             <RoleSwitcher
               currentRole={currentRole}

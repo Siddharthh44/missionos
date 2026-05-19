@@ -4,6 +4,8 @@ import { useState, type PropsWithChildren } from "react";
 import MobileNav from "@/components/layout/mobile-nav";
 import Sidebar from "@/components/layout/sidebar";
 import Topbar from "@/components/layout/topbar";
+import CommandPaletteRoot from "@/components/command-palette/command-palette-root";
+import PageTransition from "@/components/shell/page-transition";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useQuarter } from "@/hooks/use-quarter";
 import { useRoleContext } from "@/hooks/use-role-context";
@@ -49,7 +51,9 @@ export default function AppShell({ children }: PropsWithChildren) {
             onSignOut={signOut}
             quarterLabel={quarterLabel}
           />
-          <main className="shell-container flex-1 py-8">{children}</main>
+          <main className="shell-container flex-1 py-8">
+            <PageTransition>{children}</PageTransition>
+          </main>
         </div>
       </div>
       <MobileNav
@@ -60,6 +64,7 @@ export default function AppShell({ children }: PropsWithChildren) {
         onSignOut={signOut}
         onClose={() => setMobileOpen(false)}
       />
+      <CommandPaletteRoot role={effectiveRole} />
     </div>
   );
 }

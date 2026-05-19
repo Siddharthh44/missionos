@@ -111,6 +111,50 @@ export interface InsightResponse {
   recommendations: string[];
 }
 
+export interface ExecutiveBriefingMomentum {
+  score: number;
+  deltaPercent: number;
+  trend: MissionHealthTrend;
+  label: string;
+}
+
+export interface ExecutiveBriefingRisk {
+  label: string;
+  severity: "low" | "medium" | "high";
+}
+
+export interface ExecutiveBriefing {
+  headline: string;
+  summary: string;
+  confidence: MissionHealthConfidence;
+  momentum: ExecutiveBriefingMomentum;
+  risks: ExecutiveBriefingRisk[];
+  highlights: string[];
+  recommendations: string[];
+}
+
+export type MissionHealthStatus = "healthy" | "attention" | "at_risk" | "critical";
+export type MissionHealthConfidence = "high" | "medium" | "low";
+export type MissionHealthTrend = "up" | "down" | "neutral";
+export type MissionHealthUrgency = "low" | "medium" | "high" | "critical";
+export type MissionHealthInsightType =
+  | "pattern"
+  | "risk"
+  | "opportunity"
+  | "recommendation";
+
+export interface MissionHealth {
+  status: MissionHealthStatus;
+  confidence: MissionHealthConfidence;
+  insight: string;
+  recommendation: string;
+  trend: MissionHealthTrend;
+  urgency: MissionHealthUrgency;
+  score: number;
+  insightType: MissionHealthInsightType;
+  sparkline: number[];
+}
+
 export interface QuarterWindow {
   id: string;
   quarter: string;

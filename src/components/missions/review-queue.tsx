@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { CheckCircle, Clock, MessageSquare, ArrowRight, AlertTriangle, Target } from "lucide-react";
+import DraftPersistenceHint from "@/components/shell/draft-persistence-hint";
+import { useToast } from "@/hooks/use-toast";
+import { useLocalDraft } from "@/hooks/use-local-draft";
+import { formatOperationalLabeled } from "@/lib/operational-time";
 import { cn } from "@/lib/cn";
+import OperationalEmptyState from "@/components/shell/operational-empty-state";
+import { operationalEmptyPresets } from "@/components/shell/operational-empty-presets";
 import StatusPill from "@/components/shell/status-pill";
 import type { Mission } from "@/types";
 
 interface ReviewQueueItem {
   mission: Mission;
-  submittedAt: string;
   reviewNotes?: string;
   recommendedAction: "approve" | "return" | "coach";
 }
@@ -48,7 +53,6 @@ const MOCK_QUEUE_ITEMS: ReviewQueueItem[] = [
         avatar_url: null,
       }
     },
-    submittedAt: "May 15",
     recommendedAction: "return",
     reviewNotes: "Needs a more concrete turnaround threshold and one cleaner definition of escalation success before it advances."
   },
@@ -81,7 +85,6 @@ const MOCK_QUEUE_ITEMS: ReviewQueueItem[] = [
         avatar_url: null,
       }
     },
-    submittedAt: "May 15",
     recommendedAction: "coach",
     reviewNotes: "The mission is directionally right, but it still needs a single accountable closer for weekly remediation completion."
   },
@@ -114,7 +117,6 @@ const MOCK_QUEUE_ITEMS: ReviewQueueItem[] = [
         avatar_url: null,
       }
     },
-    submittedAt: "May 16",
     recommendedAction: "approve",
     reviewNotes: "Evidence quality is strong, recipient scope is coherent, and the story is ready for leadership discussion."
   }
@@ -125,19 +127,80 @@ export default function ReviewQueue({
   onReviewAction 
 }: ReviewQueueProps) {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [reviewComment, setReviewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const toast = useToast();
 
-  const handleReviewAction = async (missionId: string, action: "approved" | "returned" | "edited") => {
+  const notifyRestored = useCallback(
+    () => {
+      toast.info(
+        "Draft restored",
+        "Your review comment was recovered for this mission.",
+      );
+    },
+    [toast],
+  );
+
+  const notifySavedLocally = useCallback(
+    () => {
+      toast.info("Changes saved locally", "Review notes stored on this device only.");
+    },
+    [toast],
+  );
+
+  const {
+    value: reviewComment,
+    setValue: setReviewComment,
+    clearDraft: clearReviewDraft,
+    meta: reviewDraftMeta,
+  } = useLocalDraft<string>({
+    scope: "review-comment",
+    draftId: selectedItem ?? undefined,
+    enabled: Boolean(selectedItem),
+    initialValue: "",
+    isEmpty: (value) => !value.trim(),
+    onRestored: notifyRestored,
+    onSavedLocally: notifySavedLocally,
+  });
+
+  const handleReviewAction = async (
+    missionId: string,
+    action: "approved" | "returned" | "edited",
+  ) => {
+    const mission = items.find((item) => item.mission.id === missionId)?.mission;
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    onReviewAction?.(missionId, action, reviewComment);
-    setSelectedItem(null);
-    setReviewComment("");
-    setIsSubmitting(false);
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      onReviewAction?.(missionId, action, reviewComment);
+
+      if (action === "approved") {
+        toast.success(
+          "Mission approved",
+          mission ? `${mission.title} advanced to aligned status.` : undefined,
+        );
+      } else if (action === "returned") {
+        toast.warning(
+          "Returned for revision",
+          mission
+            ? `${mission.title} sent back with review notes.`
+            : "Review notes attached for the owner.",
+        );
+      } else {
+        toast.info(
+          "Coaching notes sent",
+          mission
+            ? `${mission.title} flagged for manager coaching.`
+            : "Owner notified to refine the mission narrative.",
+        );
+      }
+
+      clearReviewDraft();
+      setSelectedItem(null);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getActionIcon = (action: ReviewQueueItem["recommendedAction"]) => {
@@ -198,8 +261,10 @@ export default function ReviewQueue({
         </div>
       </div>
 
-      {/* Queue Items */}
       <div className="space-y-4">
+        {items.length === 0 ? (
+          <OperationalEmptyState {...operationalEmptyPresets.reviewsClear} />
+        ) : null}
         {items.map((item) => {
           const ActionIcon = getActionIcon(item.recommendedAction);
           const isSelected = selectedItem === item.mission.id;
@@ -235,7 +300,12 @@ export default function ReviewQueue({
                       <span>•</span>
                       <span>{item.mission.thrust_area}</span>
                       <span>•</span>
-                      <span>Submitted: {item.submittedAt}</span>
+                      <span>
+                        {formatOperationalLabeled(
+                          "Submitted",
+                          item.mission.updated_at,
+                        )}
+                      </span>
                     </div>
                   </div>
                   
@@ -281,6 +351,7 @@ export default function ReviewQueue({
                         rows={3}
                         className="w-full rounded-lg border border-border bg-surface-1 px-4 py-3 text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                       />
+                      <DraftPersistenceHint meta={reviewDraftMeta} className="mt-2" />
                     </div>
                     
                     <div className="flex items-center justify-between">

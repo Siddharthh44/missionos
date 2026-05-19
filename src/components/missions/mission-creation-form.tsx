@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle, Target, Calendar, Users } from "lucide-react";
+import DraftPersistenceHint from "@/components/shell/draft-persistence-hint";
+import { useToast } from "@/hooks/use-toast";
+import { useLocalDraft } from "@/hooks/use-local-draft";
 import { cn } from "@/lib/cn";
 import type { UomType } from "@/types";
 
@@ -36,24 +39,83 @@ const UOM_TYPES: { value: UomType; label: string; description: string }[] = [
 
 const STEP_LABELS = ["Intent", "Measure", "Rhythm"];
 
+const INITIAL_MISSION_FORM: MissionFormData = {
+  title: "",
+  description: "",
+  thrust_area: "",
+  uom_type: "numeric_max",
+  target_value: null,
+  target_date: null,
+  impact_score: 3,
+};
+
+interface MissionCreateDraft {
+  form: MissionFormData;
+  step: number;
+}
+
+function isMissionCreateDraftEmpty(draft: MissionCreateDraft): boolean {
+  const form = draft.form;
+  return (
+    draft.step === 0 &&
+    !form.title.trim() &&
+    !form.description.trim() &&
+    !form.thrust_area &&
+    form.uom_type === INITIAL_MISSION_FORM.uom_type &&
+    form.target_value === null &&
+    form.target_date === null &&
+    form.impact_score === INITIAL_MISSION_FORM.impact_score
+  );
+}
+
 export default function MissionCreationForm() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
+  const toast = useToast();
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [formData, setFormData] = useState<MissionFormData>({
-    title: "",
-    description: "",
-    thrust_area: "",
-    uom_type: "numeric_max",
-    target_value: null,
-    target_date: null,
-    impact_score: 3
-  });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const notifyRestored = useCallback(
+    () => {
+      toast.info(
+        "Draft restored",
+        "Your in-progress mission setup was recovered from this device.",
+      );
+    },
+    [toast],
+  );
+
+  const notifySavedLocally = useCallback(
+    () => {
+      toast.info("Changes saved locally", "Progress is stored on this device only.");
+    },
+    [toast],
+  );
+
+  const {
+    value: draft,
+    setValue: setDraft,
+    clearDraft,
+    meta: draftMeta,
+  } = useLocalDraft<MissionCreateDraft>({
+    scope: "mission-create",
+    initialValue: { form: INITIAL_MISSION_FORM, step: 0 },
+    isEmpty: isMissionCreateDraftEmpty,
+    onRestored: notifyRestored,
+    onSavedLocally: notifySavedLocally,
+  });
+
+  const formData = draft.form;
+  const currentStep = draft.step;
+
   const updateFormData = (updates: Partial<MissionFormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setDraft((prev) => ({ ...prev, form: { ...prev.form, ...updates } }));
+  };
+
+  const setCurrentStep = (step: number | ((prev: number) => number)) => {
+    setDraft((prev) => ({
+      ...prev,
+      step: typeof step === "function" ? step(prev.step) : step,
+    }));
   };
 
   const handleNext = () => {
@@ -81,9 +143,14 @@ export default function MissionCreationForm() {
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Navigate to missions board with success state
-    router.push("/missions?created=true");
+
+    toast.success(
+      "Mission created",
+      `${formData.title.trim()} is now visible on your mission board.`,
+    );
+
+    clearDraft();
+    router.push("/missions");
   };
 
   const isStepValid = (step: number): boolean => {
@@ -108,6 +175,7 @@ export default function MissionCreationForm() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <DraftPersistenceHint meta={draftMeta} className="mb-4" />
       {/* Progress Steps */}
       <div className="mb-8 flex items-center justify-center space-x-8">
         {STEP_LABELS.map((label, index) => (

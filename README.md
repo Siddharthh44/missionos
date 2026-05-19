@@ -6,19 +6,34 @@ MissionOS is a mission alignment and execution platform built around a **Mission
 
 It sits between organizational strategy and individual execution. Employees see how their work connects to priorities. Managers get real-time team momentum. Workspace admins get completion dashboards and audit visibility. The product language centers on *missions*, *momentum*, and *syncs*—helping teams maintain alignment every quarter.
 
+The current build is **demo-ready**: a premium dark operational shell, seeded domain data, deterministic AI interpretation (no live model dependency), and role-aware workflows suitable for hackathon demos and portfolio review.
+
 ---
 
 ## Features
 
+### Operational core
+
 - **Role-aware dashboards** — Employee, manager, and admin surfaces with scoped navigation and data
-- **Mission Board** — Create, draft, and submit missions with validation-ready structure
-- **Mission Sync** — Quarterly achievement logging and progress tracking
-- **Alignment Review** — Manager review queue for submitted missions
-- **Momentum Insights** — Analytics and operational signals for execution health
-- **AI insight surfaces** — Contextual insight cards within the operational shell
-- **Operational shell** — Unified app chrome: sidebar, topbar, quarter context, page transitions
-- **Responsive SaaS UI** — Dark Mission Control aesthetic, card-first layouts, Framer Motion polish
-- **Demo mode** — Local preview profiles when Supabase is not configured
+- **Mission Board** — Filterable board with inline drill-down, health strips, and operational empty states
+- **Mission Sync** — Quarterly momentum check-ins with narrative sync submissions
+- **Alignment Review** — Manager review queue with coaching, return, and approve flows
+- **Momentum Insights** — Portfolio-level signals and fleet health summaries
+
+### AI operational intelligence
+
+- **AI Mission Health** — Deterministic health scores, urgency bands, and mission-level recommendations
+- **Executive Briefing** — Portfolio headline, risk register, and momentum framing on home and insights
+- **AI insight cards** — Contextual interpretation surfaces embedded in the operational shell
+
+### Product systems
+
+- **Command palette** — Keyboard-first navigation and operational actions (`⌘K` / `Ctrl+K`)
+- **Relative operational time** — Consistent “2h ago” / deadline labels aligned to seeded demo time
+- **Local draft persistence** — Resilient form drafts for mission create, sync, and review (device-local)
+- **Toast feedback** — Calm operational confirmations without modal overload
+- **Operational shell** — Sidebar, topbar, quarter context, page transitions, premium empty states
+- **Demo mode** — Seeded profiles and catalog when Supabase is not configured
 
 ---
 
@@ -34,6 +49,23 @@ It sits between organizational strategy and individual execution. Employees see 
 | Icons | [Lucide React](https://lucide.dev/) |
 | Testing | [Vitest](https://vitest.dev/) |
 | Package manager | [pnpm](https://pnpm.io/) |
+
+---
+
+## Architecture
+
+MissionOS uses an **additive, shell-first** architecture: routes compose shared operational primitives rather than one-off page scaffolds.
+
+| Layer | Role |
+|-------|------|
+| **Next.js App Router** | Route groups for auth and dashboard; API routes for Supabase auth and demo role switching |
+| **Supabase** | SSR auth, session cookies, optional production identity |
+| **Seeded operational domain** | `mission-catalog`, `seed.ts`, and selectors power demo-realistic missions without a live backend |
+| **Shell composition** | `OperationalRoutePage`, `ShellCard`, briefing surfaces, health strips, activity feeds |
+| **Deterministic AI layer** | Rule-based mission health and executive briefing—portfolio signals without live LLM calls |
+| **Client resilience** | Namespaced `localStorage` drafts, debounced writes, versioned envelopes |
+
+New capabilities are introduced as isolated features (`features/briefing`, `features/command-palette`, `features/missions`) and wired into existing routes without rewriting the shell.
 
 ---
 
@@ -108,9 +140,9 @@ missionos/
 │   ├── app/             # Next.js App Router pages & API routes
 │   ├── components/      # UI: layout shell, missions, dashboard widgets
 │   ├── data/            # Seed data & selectors
-│   ├── features/        # Auth, navigation, shell domain logic
-│   ├── hooks/           # React hooks (role, quarter, user)
-│   ├── lib/             # Supabase clients, utilities, constants
+│   ├── features/        # Auth, briefing, command palette, mission health, toast
+│   ├── hooks/           # React hooks (role, quarter, drafts, toast)
+│   ├── lib/             # Supabase clients, operational time, local draft storage
 │   ├── providers/       # React context providers
 │   └── types/           # Shared TypeScript types
 ├── .env.example         # Environment variable template
@@ -163,8 +195,9 @@ Ensure `NEXT_PUBLIC_APP_URL` matches your production domain and Supabase redirec
 MissionOS is designed to feel like a **modern productivity platform**, not traditional HRMS software.
 
 - **Mission Control aesthetic** — Dark, focused operational UI with clear hierarchy and momentum-oriented language
-- **Operational UX** — Card-first layouts, progressive disclosure, role-scoped navigation, minimal modal overload
-- **Premium SaaS direction** — Inspired by tools like Linear and Vercel: fast, clean, motivating, and visual-first
+- **Operational UX** — Card-first layouts, progressive disclosure, role-scoped navigation, intentional empty states
+- **Additive architecture** — Extend the shell and seed layer; avoid throwaway scaffolds and dead placeholder routes
+- **Premium SaaS direction** — Calm motion, restrained copy, portfolio-quality density inspired by Linear and Vercel
 
 ---
 
