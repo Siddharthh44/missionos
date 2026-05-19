@@ -175,21 +175,6 @@ Ensure `NEXT_PUBLIC_APP_URL` matches your production domain and Supabase redirec
 
 ---
 
-## Screenshots
-
-<!-- Add screenshots for GitHub / hackathon / portfolio -->
-
-| Screen | Suggested filename |
-|--------|-------------------|
-| Mission Control dashboard | `mission-control.png` |
-| Mission Board | `mission-board.png` |
-| Mission Sync | `mission-sync.png` |
-| Alignment Review | `alignment-review.png` |
-
-> Add images to a `screenshots/` folder or embed them in this README when ready for public release.
-
----
-
 ## Philosophy
 
 MissionOS is designed to feel like a **modern productivity platform**, not traditional HRMS software.
